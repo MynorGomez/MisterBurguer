@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Restaurante</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="shape"></div>
+            <img src="{{ url_for('static', filename='img/wave.png') }}" alt="" class="wave">
+            <img src="{{ url_for('static', filename='img/bg.svg') }}" alt="Ilustración login" class="illustration">
+        </div>
+
+        <div class="right-panel">
+            <div class="login-box">
+                
+
+                <h1>BIENVENIDO</h1>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash-box">
+                            {% for message in messages %}
+                                <p>{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <input type="text" name="username" placeholder="Usuario" required>
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                    <button type="submit">INGRESAR</button>
+                </form>
+
+                <div class="link-publico">
+                    <a href="{{ url_for('public.menu_publico') }}">Ir al menú público</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

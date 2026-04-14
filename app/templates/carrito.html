@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito - MisterBurger</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/carrito.css') }}">
+</head>
+<body>
+    <div class="contenedor">
+        <div class="encabezado">
+            <div>
+                <h1>Tu carrito</h1>
+                <p>Revisa tu pedido antes de confirmarlo</p>
+            </div>
+            <a class="volver" href="{{ url_for('public.menu_publico') }}">← Volver al menú</a>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mensajes">
+                    {% for message in messages %}
+                        <div class="mensaje">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if carrito %}
+            <div class="layout">
+                <div class="lista-productos">
+                    {% for item in carrito %}
+                        <div class="item-card">
+                            <div>
+                                <h3>{{ item.nombre }}</h3>
+                                {% if item.tipo == 'combo' %}
+                                    <p><em>Combo predefinido</em></p>
+                                {% elif item.tipo == 'personalizado' %}
+                                    <p><em>Hamburguesa personalizada</em></p>
+                                {% endif %}
+                                <p>Precio unitario: Q {{ "%.2f"|format(item.precio) }}</p>
+                                <p>Subtotal: <strong>Q {{ "%.2f"|format(item.subtotal) }}</strong></p>
+                            </div>
+
+                            <div class="acciones-item">
+                                <div class="contador">
+                                    {% if item.tipo == 'combo' %}
+                                        <a href="{{ url_for('public.restar_combo', id_combo=item.id_combo) }}">-</a>
+                                        <span>{{ item.cantidad }}</span>
+                                        <a href="{{ url_for('public.sumar_combo', id_combo=item.id_combo) }}">+</a>
+                                    {% elif item.tipo == 'personalizado' %}
+                                        <a href="{{ url_for('public.restar_personalizado', id_base=item.id_base, pan=item.pan, queso=item.queso, ingredientes=item.ingredientes|join(',')) }}">-</a>
+                                        <span>{{ item.cantidad }}</span>
+                                        <a href="{{ url_for('public.sumar_personalizado', id_base=item.id_base, pan=item.pan, queso=item.queso, ingredientes=item.ingredientes|join(',')) }}">+</a>
+                                    {% else %}
+                                        <a href="{{ url_for('public.restar_item', id_producto=item.id_producto) }}">-</a>
+                                        <span>{{ item.cantidad }}</span>
+                                        <a href="{{ url_for('public.sumar_item', id_producto=item.id_producto) }}">+</a>
+                                    {% endif %}
+                                </div>
+
+                                {% if item.tipo == 'combo' %}
+                                    <a class="eliminar" href="{{ url_for('public.eliminar_combo', id_combo=item.id_combo) }}">
+                                        Eliminar
+                                    </a>
+                                {% elif item.tipo == 'personalizado' %}
+                                    <a class="eliminar" href="{{ url_for('public.eliminar_personalizado', id_base=item.id_base, pan=item.pan, queso=item.queso, ingredientes=item.ingredientes|join(',')) }}">
+                                        Eliminar
+                                    </a>
+                                {% else %}
+                                    <a class="eliminar" href="{{ url_for('public.eliminar_item', id_producto=item.id_producto) }}">
+                                        Eliminar
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="acciones-carrito">
+                        <a class="vaciar" href="{{ url_for('public.vaciar_carrito') }}">Vaciar carrito</a>
+                    </div>
+                </div>
+
+                <div class="resumen">
+                    <h2>Resumen del pedido</h2>
+                    <div class="total-box">
+                        <span>Total</span>
+                        <strong>Q {{ "%.2f"|format(total) }}</strong>
+                    </div>
+
+                    <button type="button" id="btnSiguiente" class="btn-siguiente">Siguiente →</button>
+                </div>
+            </div>
+        {% else %}
+            <div class="carrito-vacio">
+                <h2>No hay productos en el carrito</h2>
+                <a href="{{ url_for('public.menu_publico') }}">Ir al menú</a>
+            </div>
+        {% endif %}
+
+        <!-- MODAL de Datos del Cliente - Dentro del contenedor -->
+        <div id="modalDatos" class="modal-overlay">
+            <div class="modal-contenedor">
+                <div class="modal-encabezado">
+                    <h2>Datos del cliente</h2>
+                    <button type="button" id="cerrarModalBtn" class="cerrar-modal">&times;</button>
+                </div>
+
+                <form id="formDatos" action="{{ url_for('public.confirmar_pedido') }}" method="POST" class="form-datos-modal">
+                    <div class="form-group">
+                        <label>Nombre del cliente <span class="requerido">*</span></label>
+                        <input type="text" id="inputNombreCliente" name="nombre_cliente" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Correo electrónico <span class="requerido">*</span></label>
+                        <input type="email" id="inputCorreoCliente" name="correo_cliente" placeholder="tu@correo.com" required>
+                    </div>
+
+                    <div class="botones-modal">
+                        <button type="button" id="btnCancelar" class="btn-cancelar">Cancelar</button>
+                        <button type="button" id="btnConfirmarPedido" class="btn-confirmar-pedido">Realizar pedido</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL de Confirmación del Pedido -->
+        <div id="modalConfirmacion" class="modal-overlay">
+            <div class="modal-contenedor">
+                <div class="modal-encabezado">
+                    <h2> Pedido Confirmado</h2>
+                    <button type="button" id="cerrarConfirmacionBtn" class="cerrar-modal">&times;</button>
+                </div>
+
+                <div class="confirmacion-contenido">
+                    <p class="numero-pedido">Número de pedido: <strong id="numeroPedidoText"></strong></p>
+                    <p class="cliente-info">Cliente: <strong id="clienteNombreText"></strong></p>
+                    <p class="cliente-info">Correo: <strong id="clienteCorreoText"></strong></p>
+                    <p class="cliente-info">Total: <strong id="totalText"></strong></p>
+                    <p class="cliente-info">Estado: <strong id="estadoText"></strong></p>
+                    <div class="pedido-detalles">
+                        <h3>Detalles del pedido</h3>
+                        <ul id="listaProductosConfirmacion"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <h2>Procesando tu pedido...</h2>
+            <p>Enviando confirmación por correo</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('📍 Script principal iniciado');
+        
+        function inicializarCarrito() {
+            console.log('🔍 Buscando elementos...');
+            
+            const btnConfirmarPedido = document.getElementById('btnConfirmarPedido');
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const modalDatos = document.getElementById('modalDatos');
+            const modalConfirmacion = document.getElementById('modalConfirmacion');
+            
+            console.log('btnConfirmarPedido:', btnConfirmarPedido ? '✓ encontrado' : '✗ NO ENCONTRADO');
+            console.log('btnSiguiente:', btnSiguiente ? '✓ encontrado' : '✗ NO ENCONTRADO');
+            console.log('modalDatos:', modalDatos ? '✓ encontrado' : '✗ NO ENCONTRADO');
+            
+            if (!btnConfirmarPedido || !btnSiguiente) {
+                console.warn('⚠️ Elementos no cargados aún. Reintentando...');
+                setTimeout(inicializarCarrito, 500);
+                return;
+            }
+            
+            console.log('✅ Todos los elementos encontrados. Configurando eventos...');
+            
+            // Botón Siguiente
+            btnSiguiente.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('👆 Click en SIGUIENTE');
+                if (modalDatos) {
+                    modalDatos.style.display = 'flex';
+                }
+            });
+            
+            // Botón Realizar Pedido
+            btnConfirmarPedido.addEventListener('click', function(e) {
+                console.log('🔴 CLICK EN REALIZAR PEDIDO');
+                e.preventDefault();
+                
+                // Buscar inputs en el momento del click
+                const inputNombre = document.getElementById('inputNombreCliente');
+                const inputCorreo = document.getElementById('inputCorreoCliente');
+                
+                console.log('inputNombre:', inputNombre);
+                console.log('inputCorreo:', inputCorreo);
+                
+                if (!inputNombre || !inputCorreo) {
+                    console.error('❌ Inputs NO encontrados');
+                    alert('Error: Campos no encontrados');
+                    return;
+                }
+                
+                const nombre = inputNombre.value.trim();
+                const correo = inputCorreo.value.trim();
+                
+                console.log('📝 Datos: nombre=', nombre, ', correo=', correo);
+                
+                if (!nombre) {
+                    alert('Ingresa tu nombre');
+                    return;
+                }
+                if (!correo) {
+                    alert('Ingresa tu correo');
+                    return;
+                }
+                
+                console.log('📤 Enviando pedido...');
+                
+                const form = new FormData();
+                form.append('nombre_cliente', nombre);
+                form.append('correo_cliente', correo);
+                
+                // Mostrar loading
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    console.log('✅ Mostrando loading...');
+                    loadingOverlay.classList.add('show');
+                }
+                
+                fetch('{{ url_for("public.confirmar_pedido") }}', {
+                    method: 'POST',
+                    body: form
+                })
+                .then(r => r.json())
+                .then(data => {
+                    console.log('📨 Respuesta:', data);
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        if (loadingOverlay) loadingOverlay.classList.remove('show');
+                    } else {
+                        console.log('✅ ÉXITO');
+                        modalDatos.style.display = 'none';
+                        
+                        // Llenar confirmación
+                        document.getElementById('numeroPedidoText').textContent = data.numero_pedido;
+                        document.getElementById('clienteNombreText').textContent = nombre;
+                        document.getElementById('clienteCorreoText').textContent = correo;
+                        document.getElementById('estadoText').textContent = 'Confirmado';
+                        document.getElementById('totalText').textContent = 'Q ' + data.total.toFixed(2);
+                        
+                        // Factura link
+                        const btnFactura = document.getElementById('btnVerFactura');
+                        if (btnFactura) {
+                            btnFactura.href = '{{ url_for("public.factura_pedido", numero_pedido="") }}' + data.numero_pedido;
+                        }
+                        
+                        // Items
+                        const listaItems = document.getElementById('listaProductosConfirmacion');
+                        if (listaItems && data.items) {
+                            listaItems.innerHTML = '';
+                            data.items.forEach(item => {
+                                const li = document.createElement('li');
+                                li.innerHTML = item.cantidad + ' x ' + item.nombre + ' - Q ' + parseFloat(item.subtotal).toFixed(2);
+                                listaItems.appendChild(li);
+                            });
+                        }
+                        
+                        // Ocultar loading después de 2.5 segundos
+                        setTimeout(() => {
+                            if (loadingOverlay) loadingOverlay.classList.remove('show');
+                            // Mostrar confirmación
+                            if (modalConfirmacion) {
+                                modalConfirmacion.style.display = 'flex';
+                            }
+                        }, 2500);
+                    }
+                })
+                .catch(err => {
+                    console.error('❌ Error en fetch:', err);
+                    alert('Error: ' + err.message);
+                    if (loadingOverlay) loadingOverlay.classList.remove('show');
+                });
+            });
+            
+            console.log('✅ Script listo');
+        }
+        
+        // Iniciar cuando esté listo el DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarCarrito);
+        } else {
+            inicializarCarrito();
+        }
+    </script>
+</body>
+</html>

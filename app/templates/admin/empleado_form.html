@@ -1,0 +1,141 @@
+{% extends "base_panel.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+<!-- Notificación Emergente de Guardando -->
+<div class="loading-notification" id="loadingNotif">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">
+        <h3>Guardando información</h3>
+        <p>Por favor espera...</p>
+    </div>
+</div>
+
+<div class="modal-overlay" id="formModal">
+    <div class="modal-content">
+        <div class="modal-header">
+        
+            <a href="{{ url_for('admin.listar_empleados') }}" class="modal-close">&times;</a>
+        </div>
+        
+        <form method="POST" class="form-modal" id="empleadoForm" style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombres</label>
+                    <input type="text" name="nombres" required
+                           value="{{ empleado[1] if empleado else '' }}" placeholder="Nombres del empleado">
+                </div>
+
+                <div class="form-group">
+                    <label>Apellidos</label>
+                    <input type="text" name="apellidos" required
+                           value="{{ empleado[2] if empleado else '' }}" placeholder="Apellidos del empleado">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Correo</label>
+                <input type="email" name="correo" required
+                       placeholder="usuario@ejemplo.com">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" name="username" required
+                           placeholder="Nombre de usuario" minlength="3">
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="password" required
+                           placeholder="Mínimo 6 caracteres" minlength="6">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>DPI</label>
+                    <input type="text" name="dpi"
+                           value="{{ empleado[3] if empleado else '' }}" placeholder="Número de DPI">
+                </div>
+
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="text" name="telefono"
+                           value="{{ empleado[4] if empleado else '' }}" placeholder="Teléfono">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Dirección</label>
+                <input type="text" name="direccion"
+                       value="{{ empleado[5] if empleado else '' }}" placeholder="Dirección completa">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Puesto/Rol</label>
+                    <select name="puesto" required>
+                        <option value="">Selecciona un puesto</option>
+                        {% for rol in roles %}
+                            <option value="{{ rol[0] }}" {% if empleado and empleado[6] == rol[0] %}selected{% endif %}>
+                                {{ rol[1] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Salario</label>
+                    <input type="number" name="salario" step="0.01"
+                           value="{{ empleado[7] if empleado else '' }}" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fecha de Contratación</label>
+                    <input type="date" name="fecha_contratacion"
+                           value="{{ empleado[8] if empleado else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option value="activo" {% if not empleado or empleado[9] == 'activo' %}selected{% endif %}>Activo</option>
+                        <option value="inactivo" {% if empleado and empleado[9] == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
+        </form>
+        <div class="form-actions">
+            <a href="{{ url_for('admin.listar_empleados') }}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-guardar" id="submitBtn" form="empleadoForm">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mostrar notificación al enviar formulario con espera de 5 segundos
+    document.getElementById('empleadoForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        document.getElementById('loadingNotif').classList.add('show');
+        document.getElementById('submitBtn').disabled = true;
+        
+        // Esperar 5 segundos antes de enviar el formulario
+        setTimeout(function() {
+            document.getElementById('empleadoForm').submit();
+        }, 5000);
+    });
+
+    // Cerrar modal al hacer clic fuera del contenido
+    document.getElementById('formModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            window.location.href = "{{ url_for('admin.listar_empleados') }}";
+        }
+    });
+</script>
+{% endblock %}

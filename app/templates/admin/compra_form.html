@@ -1,0 +1,365 @@
+{% extends "base_panel.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<main class="content">  
+    <div class="topbar">
+        <h1>{% if compra %}Editar Compra #{{ compra[0] }}{% else %}Nueva Compra{% endif %}</h1>
+        <a class="btn" href="{{ url_for('admin.listar_compras') }}">Volver</a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="panel" style="padding: 20px;">
+        <form method="POST" id="formCompra">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_proveedor">Proveedor *</label>
+                    <select name="id_proveedor" id="id_proveedor" required>
+                        <option value="">-- Selecciona proveedor --</option>
+                        {% for prov in proveedores %}
+                            <option value="{{ prov[0] }}" {% if compra and compra[1] == prov[0] %}selected{% endif %}>
+                                {{ prov[1] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="numero_factura">Número de Factura *</label>
+                    <input type="text" name="numero_factura" id="numero_factura" required 
+                           value="{% if compra %}{{ compra[2] }}{% endif %}" 
+                           placeholder="COM-001">
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha_compra">Fecha de Compra *</label>
+                    <input type="date" name="fecha_compra" id="fecha_compra" required
+                           value="{% if compra %}{{ compra[3]|string }}{% else %}{{ today }}{% endif %}">
+                </div>
+
+                {% if compra %}
+                    <div class="form-group">
+                        <label for="estado">Estado</label>
+                        <select name="estado" id="estado">
+                            <option value="registrada" {% if compra[5] == 'registrada' %}selected{% endif %}>Registrada</option>
+                            <option value="anulada" {% if compra[5] == 'anulada' %}selected{% endif %}>Anulada</option>
+                        </select>
+                    </div>
+                {% endif %}
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <h2>Detalles de Compra</h2>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="id_insumo">Insumo</label>
+                    <select id="id_insumo" name="id_insumo">
+                        <option value="">-- Selecciona insumo --</option>
+                        {% for ins in insumos if not compra %}
+                            <option value="{{ ins[0] }}" data-nombre="{{ ins[1] }}" data-costo="{{ ins[2] }}">
+                                {{ ins[1] }} (Q{{ "%.2f"|format(ins[2]) }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" id="cantidad" name="cantidad" step="0.01" placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="costo_unitario">Costo Unitario (Q)</label>
+                    <input type="number" id="costo_unitario" name="costo_unitario" step="0.01" placeholder="0.00">
+                </div>
+
+                <button type="button" class="btn" onclick="agregarItem()" style="margin-top: 25px;">
+                    ➕ Agregar Item
+                </button>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <h3>Items de la Compra</h3>
+            <div id="itemsContainer">
+                <table id="tablaItems" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f5f5f5;">
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Insumo</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Cantidad</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Costo Unit.</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Subtotal</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                        {% if compra and detalles %}
+                            {% for detalle in detalles %}
+                                <tr class="item-row">
+                                    <td style="padding: 10px; border: 1px solid #ddd;">{{ detalle[1] }}</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">{{ detalle[2] }}</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">Q{{ "%.2f"|format(detalle[3]) }}</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">Q{{ "%.2f"|format(detalle[4]) }}</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                                        <button type="button" class="btn-tabla btn-danger" onclick="alert('En modo edición, los items no se pueden modificar aquí')">
+                                            🗑️
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+                <div id="emptyMessage" {% if compra and detalles %}style="display: none;"{% endif %}>
+                    <p style="text-align: center; color: #999; padding: 20px;">
+                        No hay items agregados. Agrega al menos uno.
+                    </p>
+                </div>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+                <h3 style="margin: 0;">Total:</h3>
+                <h2 style="margin: 0; color: #2196F3;">Q <span id="totalDisplay">0.00</span></h2>
+            </div>
+
+            <!-- Campo oculto para enviar JSON de items -->
+            <input type="hidden" name="items_json" id="items_json" value="[]">
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="submit" class="btn" style="background-color: #4CAF50;">
+                    💾 {% if compra %}Actualizar{% else %}Guardar{% endif %} Compra
+                </button>
+                <a href="{{ url_for('admin.listar_compras') }}" class="btn" style="background-color: #999;">
+                    ❌ Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+// Array para almacenar items
+let items = [];
+let insumoMap = {};
+
+// Cargar datos de insumos
+document.addEventListener('DOMContentLoaded', function() {
+    const selectInsumo = document.getElementById('id_insumo');
+    
+    // Crear mapa de insumos para búsqueda rápida
+    Array.from(selectInsumo.options).forEach(option => {
+        if (option.value) {
+            insumoMap[option.value] = {
+                nombre: option.dataset.nombre,
+                costo: parseFloat(option.dataset.costo || 0)
+            };
+        }
+    });
+
+    // Si es edición, deshabilitar campos
+    {% if compra %}
+        document.getElementById('id_proveedor').disabled = true;
+        document.getElementById('numero_factura').disabled = true;
+        document.getElementById('fecha_compra').disabled = true;
+        document.getElementById('id_insumo').disabled = true;
+        document.getElementById('cantidad').disabled = true;
+        document.getElementById('costo_unitario').disabled = true;
+    {% endif %}
+});
+
+function agregarItem() {
+    const selectInsumo = document.getElementById('id_insumo');
+    const cantidad = parseFloat(document.getElementById('cantidad').value);
+    const costoUnitario = parseFloat(document.getElementById('costo_unitario').value);
+
+    // Validaciones
+    if (!selectInsumo.value) {
+        alert('Selecciona un insumo');
+        return;
+    }
+
+    if (isNaN(cantidad) || cantidad <= 0) {
+        alert('Ingresa una cantidad válida');
+        return;
+    }
+
+    if (isNaN(costoUnitario) || costoUnitario <= 0) {
+        alert('Ingresa un costo unitario válido');
+        return;
+    }
+
+    // Crear item
+    const item = {
+        id_insumo: selectInsumo.value,
+        nombre: insumoMap[selectInsumo.value].nombre,
+        cantidad: cantidad,
+        costo_unitario: costoUnitario,
+        subtotal: cantidad * costoUnitario
+    };
+
+    // Agregar a array
+    items.push(item);
+
+    // Agregar fila a tabla
+    agregarFilaTabla(item);
+
+    // Limpiar campos
+    selectInsumo.value = '';
+    document.getElementById('cantidad').value = '';
+    document.getElementById('costo_unitario').value = '';
+
+    // Actualizar total
+    actualizarTotal();
+
+    // Ocultar mensaje vacío
+    document.getElementById('emptyMessage').style.display = 'none';
+}
+
+function agregarFilaTabla(item) {
+    const tbody = document.getElementById('itemsBody');
+    const row = document.createElement('tr');
+    row.className = 'item-row';
+    row.innerHTML = `
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.nombre}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${item.cantidad.toFixed(2)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">Q${item.costo_unitario.toFixed(2)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">Q${item.subtotal.toFixed(2)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+            <button type="button" class="btn-tabla btn-danger" onclick="eliminarItem(this, ${items.length - 1})">
+                🗑️
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+}
+
+function eliminarItem(btn, index) {
+    // Eliminar del array
+    items.splice(index, 1);
+
+    // Eliminar fila de tabla
+    btn.closest('tr').remove();
+
+    // Actualizar total
+    actualizarTotal();
+
+    // Mostrar mensaje vacío si no hay items
+    if (items.length === 0) {
+        document.getElementById('emptyMessage').style.display = 'block';
+    }
+}
+
+function actualizarTotal() {
+    const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+    document.getElementById('totalDisplay').textContent = total.toFixed(2);
+}
+
+// Al enviar formulario
+document.getElementById('formCompra').addEventListener('submit', function(e) {
+    {% if not compra %}
+        if (items.length === 0) {
+            e.preventDefault();
+            alert('Debe agregar al menos un item');
+            return;
+        }
+
+        // Enviar items como JSON
+        document.getElementById('items_json').value = JSON.stringify(items);
+    {% endif %}
+});
+</script>
+
+<style>
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+}
+
+.btn {
+    padding: 10px 20px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background-color: #1976D2;
+}
+
+.btn-tabla {
+    padding: 5px 10px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.btn-tabla:hover {
+    background-color: #1976D2;
+}
+
+.alert {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.alert-info {
+    background-color: #2196F3;
+    color: white;
+}
+</style>
+{% endblock %}

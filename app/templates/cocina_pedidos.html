@@ -1,0 +1,234 @@
+{% extends "base_panel.html" %}
+{% block content %}
+    <meta charset="UTF-8">
+    <title>Pedidos Cocina</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cocina.css') }}">
+    <style>
+        .control-actualización {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .control-actualización label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .control-actualización input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .estado-actualizacion {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .estado-actualizacion.activo {
+            background-color: #4CAF50;
+        }
+
+        .estado-actualizacion.inactivo {
+            background-color: #999;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .actualizando {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+
+    <div class="contenedor">
+        <div class="top">
+            <div>
+                <h1>Cocina</h1>
+                <p>Pedidos en orden de llegada</p>
+            </div>
+           </div>
+
+        <!-- Control de Auto-Actualización -->
+        <div class="control-actualización">
+            <label>
+                <input type="checkbox" id="enableAutoRefresh" checked>
+                <strong>Auto-actualización</strong>
+            </label>
+            <span class="estado-actualizacion activo" id="statusIndicator"></span>
+            <small id="lastUpdate" style="color: #666;"></small>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mensajes">
+                    {% for message in messages %}
+                        <div class="mensaje">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid-pedidos" id="pedidosContainer">
+            {% for p in pedidos %}
+                <div class="pedido-card {% if p[3] == 'listo' %}card-listo{% elif p[3] == 'en_preparacion' %}card-preparacion{% endif %}" data-pedido-id="{{ p[0] }}">
+                    <h3 style="font-size: 1.2em; margin-bottom: 12px;">{{ p[1] }}</h3>
+                    <p style="font-size: 1.05em;"><strong>Cliente:</strong> {{ p[2] }}</p>
+                    <p style="font-size: 1.05em;"><strong>Estado:</strong> <span class="badge-estado {% if p[3] == 'listo' %}estado-listo{% elif p[3] == 'en_preparacion' %}estado-preparacion{% elif p[3] == 'confirmado' %}estado-confirmado{% endif %}">{{ p[3]|upper|replace('_', ' ') }}</span></p>
+                    <p style="font-size: 1.05em;"><strong>Fecha:</strong> {{ p[4] }}</p>
+                    <p style="font-size: 1.1em;"><strong>Total:</strong> Q {{ "%.2f"|format(p[5]) }}</p>
+
+                    <div class="acciones">
+                        <a href="{{ url_for('cocina.detalle_pedido_cocina', id_pedido=p[0]) }}">Ver detalle</a>
+                        {% if p[3] == 'confirmado' %}
+                            <a href="{{ url_for('cocina.cambiar_estado_pedido', id_pedido=p[0], nuevo_estado='en_preparacion') }}">En preparación</a>
+                        {% elif p[3] == 'en_preparacion' %}
+                            <a href="{{ url_for('cocina.cambiar_estado_pedido', id_pedido=p[0], nuevo_estado='listo') }}">Listo</a>
+                        {% elif p[3] == 'listo' %}
+                            <a href="{{ url_for('cocina.cambiar_estado_pedido', id_pedido=p[0], nuevo_estado='entregado') }}">Entregado</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p>No hay pedidos activos.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Auto-actualización de pedidos
+        let autoRefreshInterval = null;
+        let lastUpdateTime = new Date();
+
+        function actualizarPedidos() {
+            fetch('{{ url_for("public.api_pedidos_cocina") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('pedidosContainer');
+                    
+                    if (data.length === 0) {
+                        container.innerHTML = '<p>No hay pedidos activos.</p>';
+                        return;
+                    }
+
+                    // Limpiar y reconstruir
+                    container.innerHTML = '';
+                    
+                    data.forEach(pedido => {
+                        const estadoClass = pedido.estado === 'listo' ? 'card-listo' : 
+                                           pedido.estado === 'en_preparacion' ? 'card-preparacion' : '';
+                        
+                        const estadoBadgeClass = pedido.estado === 'listo' ? 'estado-listo' : 
+                                                pedido.estado === 'en_preparacion' ? 'estado-preparacion' : 
+                                                pedido.estado === 'confirmado' ? 'estado-confirmado' : '';
+
+                        let accionesHTML = '';
+                        if (pedido.estado === 'confirmado') {
+                            accionesHTML = `<a href="/cocina/cambiar_estado/${pedido.id}/en_preparacion">En preparación</a>`;
+                        } else if (pedido.estado === 'en_preparacion') {
+                            accionesHTML = `<a href="/cocina/cambiar_estado/${pedido.id}/listo">Listo</a>`;
+                        } else if (pedido.estado === 'listo') {
+                            accionesHTML = `<a href="/cocina/cambiar_estado/${pedido.id}/entregado">Entregado</a>`;
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = `pedido-card ${estadoClass}`;
+                        card.dataset.pedidoId = pedido.id;
+                        card.innerHTML = `
+                            <h3 style="font-size: 1.2em; margin-bottom: 12px;">${pedido.numero}</h3>
+                            <p style="font-size: 1.05em;"><strong>Cliente:</strong> ${pedido.cliente}</p>
+                            <p style="font-size: 1.05em;"><strong>Estado:</strong> <span class="badge-estado ${estadoBadgeClass}">${pedido.estado.toUpperCase().replace('_', ' ')}</span></p>
+                            <p style="font-size: 1.05em;"><strong>Fecha:</strong> ${pedido.fecha}</p>
+                            <p style="font-size: 1.1em;"><strong>Total:</strong> Q ${parseFloat(pedido.total).toFixed(2)}</p>
+                            <div class="acciones">
+                                <a href="/cocina/pedido/${pedido.id}">Ver detalle</a>
+                                ${accionesHTML}
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+
+                    // Actualizar hora de última actualización
+                    lastUpdateTime = new Date();
+                    actualizarTextoUltimaActualizacion();
+                })
+                .catch(error => {
+                    console.error('Error al actualizar pedidos:', error);
+                    actualizarEstadoIndicador(false);
+                });
+        }
+
+        function actualizarEstadoIndicador(activo) {
+            const indicator = document.getElementById('statusIndicator');
+            if (activo) {
+                indicator.textContent = '✓ En vivo';
+                indicator.classList.add('activo');
+                indicator.classList.remove('inactivo');
+            } else {
+                indicator.textContent = '⊗ Offline';
+                indicator.classList.remove('activo');
+                indicator.classList.add('inactivo');
+            }
+        }
+
+        function actualizarTextoUltimaActualizacion() {
+            const now = new Date();
+            const diff = Math.floor((now - lastUpdateTime) / 1000);
+            let texto = 'Última actualización: ';
+            
+            if (diff < 60) {
+                texto += 'hace unos segundos';
+            } else if (diff < 3600) {
+                texto += `hace ${Math.floor(diff / 60)} minuto${Math.floor(diff / 60) > 1 ? 's' : ''}`;
+            } else {
+                texto += `hace ${Math.floor(diff / 3600)} hora${Math.floor(diff / 3600) > 1 ? 's' : ''}`;
+            }
+            document.getElementById('lastUpdate').textContent = texto;
+        }
+
+        function iniciarAutoRefresh() {
+            // Actualizar cada 5 segundos
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(() => {
+                actualizarPedidos();
+            }, 5000);
+            actualizarPedidos(); // Actualizar inmediatamente
+        }
+
+        function detenerAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        }
+
+        // Checkbox para control manual
+        document.getElementById('enableAutoRefresh').addEventListener('change', function() {
+            if (this.checked) {
+                iniciarAutoRefresh();
+                actualizarEstadoIndicador(true);
+            } else {
+                detenerAutoRefresh();
+                actualizarEstadoIndicador(false);
+            }
+        });
+
+        // Iniciar auto-refresh al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            iniciarAutoRefresh();
+        });
+
+        // Actualizar texto de última actualización cada segundo
+        setInterval(actualizarTextoUltimaActualizacion, 1000);
+    </script>
+{% endblock %}

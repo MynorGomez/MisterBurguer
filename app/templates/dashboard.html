@@ -1,0 +1,156 @@
+{% extends "base_panel.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+<div style="padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+    <h1 style="margin-bottom: 30px; font-size: 32px; color: white;"></h1>
+    
+    <!-- KPI Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <p style="color: #999; font-size: 14px; margin: 0 0 10px 0;">💰 Total Ventas</p>
+            <h2 style="color: #4CAF50; font-size: 32px; margin: 0;">Q {{ "%.2f"|format(total_ventas_mes) }}</h2>
+        </div>
+        
+        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <p style="color: #999; font-size: 14px; margin: 0 0 10px 0;">📦 Total Compras</p>
+            <h2 style="color: #FF9800; font-size: 32px; margin: 0;">Q {{ "%.2f"|format(total_compras_mes) }}</h2>
+        </div>
+        
+        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <p style="color: #999; font-size: 14px; margin: 0 0 10px 0;">🛒 Pedidos</p>
+            <h2 style="color: #2196F3; font-size: 32px; margin: 0;">{{ cantidad_pedidos }}</h2>
+        </div>
+        
+       
+    </div>
+    
+    <!-- Gráficos principales -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <!-- Gráfico de Ventas -->
+        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <h2 style="margin-bottom: 20px; font-size: 20px; color: #333; margin-top: 0;">Ventas </h2>
+            <canvas id="ventasChart"></canvas>
+        </div>
+        
+        <!-- Gráfico de Compras -->
+        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <h2 style="margin-bottom: 20px; font-size: 20px; color: #333; margin-top: 0;"> Compras</h2>
+            <canvas id="comprasChart"></canvas>
+        </div>
+    </div>
+    
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de Ventas
+    const ventasCtx = document.getElementById('ventasChart').getContext('2d');
+    new Chart(ventasCtx, {
+        type: 'line',
+        data: {
+            labels: {{ fechas_ventas | tojson }},
+            datasets: [{
+                label: 'Ventas (Q)',
+                data: {{ totales_ventas | tojson }},
+                borderColor: '#4CAF50',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#4CAF50',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 12, weight: 'bold' },
+                        color: '#333'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#999'
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#999'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    
+    // Gráfico de Compras
+    const comprasCtx = document.getElementById('comprasChart').getContext('2d');
+    new Chart(comprasCtx, {
+        type: 'line',
+        data: {
+            labels: {{ fechas_compras | tojson }},
+            datasets: [{
+                label: 'Compras (Q)',
+                data: {{ totales_compras | tojson }},
+                borderColor: '#FF9800',
+                backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#FF9800',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 12, weight: 'bold' },
+                        color: '#333'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#999'
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#999'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    
+   
+{% endblock %}

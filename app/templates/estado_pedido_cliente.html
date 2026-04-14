@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Pedido - MisterBurger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .contenedor-cliente {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #ff6b35;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .logo-mini {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .datos {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .datos p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .datos strong {
+            color: #333;
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .datos p > span {
+            color: #333;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .estado {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .estado.confirmado {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .estado.en_preparacion {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+
+        .estado.listo {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .estado.entregado {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 18px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ff6b35;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        thead {
+            background-color: #f0f0f0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .info-correo {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 25px;
+        }
+
+        .info-correo p {
+            margin: 5px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .info-correo strong {
+            color: #1976D2;
+        }
+
+        .estado-timeline {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ff6b35;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-content h4 {
+            color: #333;
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+
+        .timeline-content p {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .estado-actual {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN - TABLET (768px)
+           ============================================ */
+        @media (max-width: 768px) {
+            .contenedor-cliente {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .header {
+                margin-bottom: 25px;
+                padding-bottom: 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .logo-mini {
+                font-size: 28px;
+            }
+
+            .datos {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .datos p {
+                font-size: 13px;
+            }
+
+            h2 {
+                font-size: 16px;
+                margin-top: 25px;
+            }
+
+            table {
+                margin-bottom: 20px;
+            }
+
+            th, td {
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .timeline-icon {
+                width: 35px;
+                height: 35px;
+                margin-right: 12px;
+                font-size: 16px;
+            }
+
+            .timeline-content h4 {
+                font-size: 13px;
+            }
+
+            .timeline-content p {
+                font-size: 11px;
+            }
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN - MOBILE (480px)
+           ============================================ */
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .contenedor-cliente {
+                padding: 20px 15px;
+                margin: 0;
+                border-radius: 8px;
+                min-height: 100vh;
+            }
+
+            .header {
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+            }
+
+            .logo-mini {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .header p {
+                font-size: 12px;
+            }
+
+            .datos {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .datos strong {
+                font-size: 11px;
+            }
+
+            .datos p {
+                font-size: 12px;
+                margin: 3px 0 0 0;
+            }
+
+            .datos p > span {
+                font-size: 14px;
+            }
+
+            .estado {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+
+            h2 {
+                font-size: 15px;
+                margin-top: 20px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+            }
+
+            table {
+                margin-bottom: 15px;
+                font-size: 12px;
+            }
+
+            thead {
+                font-size: 11px;
+            }
+
+            th {
+                padding: 8px 5px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            td {
+                padding: 8px 5px;
+                font-size: 12px;
+            }
+
+            .estado-timeline {
+                margin-top: 20px;
+                padding: 15px;
+                border-radius: 6px;
+            }
+
+            .estado-timeline h3 {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+
+            .timeline-item {
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+            }
+
+            .timeline-icon {
+                width: 32px;
+                height: 32px;
+                margin-right: 10px;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+
+            .timeline-content h4 {
+                font-size: 12px;
+                margin-bottom: 2px;
+            }
+
+            .timeline-content p {
+                font-size: 10px;
+            }
+
+            .estado-actual {
+                padding: 8px 12px;
+                margin-top: 15px;
+                font-size: 13px;
+            }
+
+            .info-correo {
+                padding: 12px;
+                margin-top: 15px;
+                border-radius: 4px;
+            }
+
+            .info-correo p {
+                margin: 4px 0;
+                font-size: 12px;
+            }
+
+            .info-correo strong {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor-cliente">
+        <div class="header">
+            <div class="logo-mini">🍔</div>
+            <h1>Seguimiento de tu Pedido</h1>
+            <p style="color: #999; font-size: 14px;">MisterBurger</p>
+        </div>
+
+        <div class="datos">
+            <div>
+                <strong>Número de Pedido:</strong>
+                <p><span>{{ pedido[1] }}</span></p>
+            </div>
+            <div>
+                <strong>Cliente:</strong>
+                <p><span>{{ pedido[2] }}</span></p>
+            </div>
+            <div>
+                <strong>Correo:</strong>
+                <p><span style="font-size: 13px;">{{ pedido[3] }}</span></p>
+            </div>
+            <div>
+                <strong>Fecha del Pedido:</strong>
+                <p><span>{{ pedido[5] }}</span></p>
+            </div>
+            <div>
+                <strong>Estado Actual:</strong>
+                <p>
+                    <span class="estado {{ pedido[4]|lower|replace('_', '') }}">
+                        {{ pedido[4]|upper|replace('_', ' ') }}
+                    </span>
+                </p>
+            </div>
+            <div>
+                <strong>Total a Pagar:</strong>
+                <p><span style="color: #ff6b35; font-size: 18px;">Q {{ "%.2f"|format(pedido[6]) }}</span></p>
+            </div>
+        </div>
+
+        <h2>📋 Detalle del Pedido</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in detalles %}
+                    <tr>
+                        <td>{{ d[1] }}</td>
+                        <td style="text-align: center;">{{ d[0] }}</td>
+                        <td>Q {{ "%.2f"|format(d[2]) }}</td>
+                        <td style="font-weight: bold; color: #ff6b35;">Q {{ "%.2f"|format(d[3]) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="estado-timeline">
+            <h3 style="color: #333; margin-bottom: 15px; font-size: 16px;">Estado de tu Pedido</h3>
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">✓</div>
+                <div class="timeline-content">
+                    <h4>Pedido Confirmado</h4>
+                    <p>Tu pedido ha sido recibido y confirmado</p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon" style="background: {% if pedido[4]|lower != 'confirmado' %}#ff6b35{% else %}#ccc{% endif %};">⏳</div>
+                <div class="timeline-content">
+                    <h4>En Preparación</h4>
+                    <p>Tu orden está siendo preparada en nuestras cocinas</p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon" style="background: {% if pedido[4]|lower == 'listo' or pedido[4]|lower == 'entregado' %}#ff6b35{% else %}#ccc{% endif %};">🎉</div>
+                <div class="timeline-content">
+                    <h4>Pedido Listo</h4>
+                    <p>Tu orden está lista para ser entregada</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="estado-actual">
+            Estado Actual: {{ pedido[4]|upper|replace('_', ' ') }}
+        </div>
+
+        <div class="info-correo">
+            <p><strong>ℹ️ Información Importante</strong></p>
+            <p>También hemos enviado los detalles completos de tu pedido a tu correo electrónico. Revisa tu bandeja de entrada para más información.</p>
+        </div>
+    </div>
+</body>
+</html>

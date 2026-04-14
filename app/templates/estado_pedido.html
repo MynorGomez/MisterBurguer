@@ -1,0 +1,49 @@
+{% extends "base_panel.html" %}
+{% block content %}
+    <meta charset="UTF-8">
+    <title>Estado del pedido</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estado_pedido.css') }}">
+
+    <div class="contenedor">
+        <div class="estado-card">
+            <h1>Seguimiento de tu pedido</h1>
+
+            <div class="datos">
+                <p><strong>Número:</strong> {{ pedido[1] }}</p>
+                <p><strong>Cliente:</strong> {{ pedido[2] }}</p>
+                <p><strong>Correo:</strong> {{ pedido[3] }}</p>
+                <p><strong>Estado actual:</strong> <span class="estado">{{ pedido[4] }}</span></p>
+                <p><strong>Fecha:</strong> {{ pedido[5] }}</p>
+                <p><strong>Total:</strong> Q {{ "%.2f"|format(pedido[6]) }}</p>
+            </div>
+
+            <h2>Detalle del pedido</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in detalles %}
+                        <tr>
+                            <td>{{ d[1] }}</td>
+                            <td>{{ d[0] }}</td>
+                            <td>Q {{ "%.2f"|format(d[2]) }}</td>
+                            <td>Q {{ "%.2f"|format(d[3]) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px; border-left: 4px solid #ff6b35;">
+                <p style="margin: 0; color: #333;"><strong>ℹ️ Tu información de pedido también ha sido enviada a tu correo.</strong></p>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Revisa tu bandeja de entrada para detalles completos y la factura.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

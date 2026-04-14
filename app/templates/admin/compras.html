@@ -1,0 +1,111 @@
+{% extends "base_panel.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<main class="content">  
+    <div class="topbar">
+        <h1>Gestión de Compras</h1>
+        <a class="btn" href="{{ url_for('admin.dashboard_admin') }}">Volver</a>
+        <a class="btn" href="{{ url_for('admin.nueva_compra') }}">Nueva compra</a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Factura</th>
+                    <th>Proveedor</th>
+                    <th>Fecha</th>
+                    <th>Subtotal</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras %}
+                    <tr>
+                        <td>#{{ compra[0] }}</td>
+                        <td>{{ compra[1] }}</td>
+                        <td>{{ compra[2] }}</td>
+                        <td>{{ compra[3]|string|replace(' ', 'T')|slice(10, None)|first if compra[3] else '-' }}</td>
+                        <td>Q{{ "%.2f"|format(compra[4]|float) }}</td>
+                        <td><strong>Q{{ "%.2f"|format(compra[5]|float) }}</strong></td>
+                        <td>
+                            <span class="badge {% if compra[6] == 'registrada' %}badge-success{% else %}badge-danger{% endif %}">
+                                {{ compra[6]|upper }}
+                            </span>
+                        </td>
+                        <td>
+                            <a class="btn-tabla" href="{{ url_for('admin.editar_compra', id_compra=compra[0]) }}">
+                                ✏️ Editar
+                            </a>
+                            {% if compra[6] == 'registrada' %}
+                                <form method="POST" action="{{ url_for('admin.eliminar_compra', id_compra=compra[0]) }}" style="display:inline;">
+                                    <button type="submit" class="btn-tabla btn-danger" onclick="return confirm('¿Eliminar esta compra?')">
+                                        🗑️ Eliminar
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if not compras %}
+            <div style="text-align: center; padding: 40px; color: #999;">
+                <p>No hay compras registradas</p>
+                <a class="btn" href="{{ url_for('admin.nueva_compra') }}">Crear primera compra</a>
+            </div>
+        {% endif %}
+    </div>
+</main>
+
+<style>
+.badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.badge-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+}
+
+.alert {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.alert-info {
+    background-color: #2196F3;
+    color: white;
+}
+</style>
+{% endblock %}

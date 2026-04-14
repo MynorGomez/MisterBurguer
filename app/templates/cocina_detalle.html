@@ -1,0 +1,65 @@
+{% extends "base_panel.html" %}
+{% block content %}
+    <meta charset="UTF-8">
+    <title>Detalle Pedido Cocina</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cocina.css') }}">
+
+    <div class="contenedor">
+        <div class="top">
+            <div>
+                <h1>Detalle del pedido</h1>
+                <p>{{ pedido[1] }}</p>
+            </div>
+            <a class="volver" href="{{ url_for('cocina.lista_pedidos_cocina') }}">Volver</a>
+        </div>
+
+        <div class="pedido-detalle-card {% if pedido[4] == 'listo' %}card-listo{% elif pedido[4] == 'en_preparacion' %}card-preparacion{% endif %}">
+            <p style="font-size: 1.1em;"><strong>Cliente:</strong> {{ pedido[2] }}</p>
+            <p style="font-size: 1.1em;"><strong>Teléfono:</strong> {{ pedido[3] }}</p>
+            <p style="font-size: 1.1em;"><strong>Estado:</strong> <span class="badge-estado {% if pedido[4] == 'listo' %}estado-listo{% elif pedido[4] == 'en_preparacion' %}estado-preparacion{% elif pedido[4] == 'confirmado' %}estado-confirmado{% endif %}">{{ pedido[4]|upper|replace('_', ' ') }}</span></p>
+            <p style="font-size: 1.1em;"><strong>Fecha:</strong> {{ pedido[5] }}</p>
+            <p style="font-size: 1.2em;"><strong>Total:</strong> Q {{ "%.2f"|format(pedido[6]) }}</p>
+
+            <h2 style="font-size: 1.3em; margin-top: 24px; margin-bottom: 16px;">Productos</h2>
+            <table class="tabla-detalle">
+                <thead>
+                    <tr>
+                        <th style="font-size: 1.05em;">Producto</th>
+                        <th style="font-size: 1.05em;">Cantidad</th>
+                        <th style="font-size: 1.05em;">Detalles de Personalización</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in detalles %}
+                        <tr>
+                            <td style="font-size: 1.05em; font-weight: bold;">{{ d[0] }}</td>
+                            <td style="font-size: 1.05em; text-align: center;">{{ d[1] }}x</td>
+                            <td>
+                                {% if d[2] %}
+                                    <div style="font-size: 1.05em; white-space: pre-wrap; padding: 8px 0;">
+                                        {% set detalles_items = d[2].split(' | ') %}
+                                        {% for item in detalles_items %}
+                                            <div style="margin-bottom: 6px; margin-left: 12px;">• {{ item }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span style="color: #999; font-size: 1.05em;">Sin personalización</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="acciones" style="margin-top: 24px;">
+                {% if pedido[4] == 'confirmado' %}
+                    <a href="{{ url_for('cocina.cambiar_estado_pedido', id_pedido=pedido[0], nuevo_estado='en_preparacion') }}" style="font-size: 1.05em;">En preparación</a>
+                {% elif pedido[4] == 'en_preparacion' %}
+                    <a href="{{ url_for('cocina.cambiar_estado_pedido', id_pedido=pedido[0], nuevo_estado='listo') }}" style="font-size: 1.05em;">Listo</a>
+                {% elif pedido[4] == 'listo' %}
+                    <a href="{{ url_for('cocina.cambiar_estado_pedido', id_pedido=pedido[0], nuevo_estado='entregado') }}" style="font-size: 1.05em;">Entregado</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

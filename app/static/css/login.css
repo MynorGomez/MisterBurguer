@@ -1,0 +1,247 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f2f2f2;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.left-panel {
+    width: 50%;
+    background: #f4f4f4;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 1;
+}
+
+.illustration {
+    width: 55%;
+    position: relative;
+    z-index: 2;
+}
+
+.right-panel {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f4f4f4;
+}
+
+.login-box {
+    width: 360px;
+    text-align: center;
+}
+
+.logo {
+    width: 100px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 58px;
+    margin-bottom: 25px;
+    color: #222;
+}
+
+input {
+    width: 100%;
+    padding: 16px;
+    margin: 10px 0;
+    border: none;
+    border-bottom: 2px solid #ccc;
+    background: #eef3fb;
+    font-size: 22px;
+    outline: none;
+    border-radius: 6px 6px 0 0;
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 30px;
+    background: #33a6e9;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 18px;
+}
+
+button:hover {
+    background: #238fd0;
+}
+
+.flash-box {
+    margin-bottom: 15px;
+}
+
+.flash-box p {
+    background: #ffe3e3;
+    color: #b00020;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.link-publico {
+    margin-top: 18px;
+}
+
+.link-publico a {
+    text-decoration: none;
+    color: #2383e2;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - TABLET (768px)
+   ============================================ */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        height: 200px;
+    }
+
+    .illustration {
+        width: 45%;
+    }
+
+    .right-panel {
+        width: 100%;
+        flex: 1;
+    }
+
+    .login-box {
+        width: 85%;
+        max-width: 400px;
+    }
+
+    h1 {
+        font-size: 42px;
+        margin-bottom: 20px;
+    }
+
+    input {
+        padding: 12px;
+        font-size: 16px;
+        margin: 8px 0;
+    }
+
+    button {
+        padding: 12px;
+        font-size: 20px;
+        margin-top: 15px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - MOBILE (480px)
+   ============================================ */
+@media (max-width: 480px) {
+    .container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    body {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .left-panel {
+        width: 100%;
+        height: 150px;
+        top: 0;
+    }
+
+    .illustration {
+        width: 50%;
+    }
+
+    .wave {
+        height: auto;
+    }
+
+    .right-panel {
+        width: 100%;
+        height: auto;
+        padding: 20px 0;
+        min-height: calc(100vh - 150px);
+    }
+
+    .login-box {
+        width: 90%;
+        max-width: 350px;
+    }
+
+    .logo {
+        width: 70px;
+        margin-bottom: 15px;
+    }
+
+    h1 {
+        font-size: 32px;
+        margin-bottom: 15px;
+    }
+
+    input {
+        padding: 10px;
+        font-size: 14px;
+        margin: 6px 0;
+    }
+
+    button {
+        padding: 10px;
+        font-size: 16px;
+        margin-top: 12px;
+        border-radius: 25px;
+    }
+
+    .flash-box {
+        margin-bottom: 10px;
+    }
+
+    .flash-box p {
+        padding: 8px;
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .link-publico {
+        margin-top: 12px;
+    }
+
+    .link-publico a {
+        font-size: 13px;
+    }
+}
+

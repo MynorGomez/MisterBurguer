@@ -1,0 +1,48 @@
+{% extends "base_panel.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+   <main class="content">
+            <div class="topbar">
+                <h1>Inventario</h1>
+                <a class="btn" href="{{ url_for('admin.dashboard_admin') }}">Volver</a>
+            </div>
+        <div class="panel">
+      
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID      </th>
+                        <th>Insumo      </th>
+                        <th>Unidad   </th>
+                        <th>Stock actual   </th>
+                        <th>Stock mínimo   </th>
+                        <th>Costo referencia   </th>
+                        <th>Estado   </th>
+                        <th>Alerta   </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in insumos %}
+                        <tr>
+                            <td>{{ i[0] }}</td>
+                            <td>{{ i[1] }}</td>
+                            <td>{{ i[2] }}</td>
+                            <td>{{ i[3] }}</td>
+                            <td>{{ i[4] }}</td>
+                            <td>Q {{ "%.2f"|format(i[5]) }}</td>
+                            <td>{{ i[6] }}</td>
+                            <td>
+                                {% if i[3] <= i[4] %}
+                                    <span class="badge-alerta">Stock bajo</span>
+                                {% else %}
+                                    <span class="badge-ok">OK</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+    </div>
+{% endblock %}

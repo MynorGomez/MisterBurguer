@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}MisterBurger{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+
+<body>
+<div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="brand">
+                <div class="brand-logo-box">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" class="brand-logo-img">
+                </div>
+                <div>
+                    <h2>MisterBurger</h2>
+                    <p>Sistema de gestión</p>
+                </div>
+            </div>
+
+ <div  style="text-align: center; background: linear-gradient(to right, #f0b761, #f5f55f); padding: 15px; border-radius: 10px;"> 
+    <div style="text-align: center;">
+         👤
+    <strong style="font-size:18px;">
+        {{ session.nombre }}
+    </strong>
+    <p style="opacity:0.8;">
+        {{ session.rol }}
+    </p>
+</div>
+            </div>
+            <nav class="menu">
+                {% if session.rol == 'administrador' %}
+                    <div class="menu-group">
+                        <button type="button" class="menu-item menu-toggle" id="adminToggle">
+                            <span class="menu-left"> Panel administrativo</span>
+                            <span id="admin-arrow">▾</span>
+                        </button>
+                        
+
+                        <div class="submenu" id="admin-submenu">
+                            <a href="{{ url_for('admin.dashboard_admin') }}" class="submenu-item">Dashboard</a>
+                            <a href="{{ url_for('admin.listar_ventas') }}" class="submenu-item">Ventas</a>
+                            <a href="{{ url_for('admin.listar_inventario') }}" class="submenu-item">Inventario</a>
+                            <a href="{{ url_for('admin.listar_proveedores') }}" class="submenu-item">Proveedores</a>
+                            <a href="{{ url_for('admin.listar_compras') }}" class="submenu-item">Compras</a>
+                            <a href="{{ url_for('admin.listar_empleados') }}" class="submenu-item">Empleados</a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if session.rol in ['cocina', 'administrador'] %}
+                    <a href="{{ url_for('cocina.lista_pedidos_cocina') }}" class="menu-item">
+                         Pedidos cocina
+                    </a>
+                {% endif %}
+
+                {% if session.rol == 'cajero' %}
+                    <a href="{{ url_for('admin.listar_ventas') }}" class="menu-item">
+                        Ventas
+                    </a>
+                    <a href="{{ url_for('admin.listar_estado_pedidos') }}" class="menu-item">
+                        Estado de Pedidos
+                    </a>
+                    
+                {% endif %}
+
+                <a href="{{ url_for('public.menu_publico') }}" class="menu-item">
+                    Menú público
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
+        ❎Cerrar sesión 
+    </a>
+            </nav>
+        </div>
+
+    </aside>
+
+    <!-- CONTENIDO -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+        </header>
+
+        <!-- CONTENIDO DINÁMICO -->
+        {% block content %}
+        {% endblock %}
+
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('adminToggle');
+    const submenu = document.getElementById('admin-submenu');
+    const arrow = document.getElementById('admin-arrow');
+    
+    if (toggleBtn && submenu) {
+        toggleBtn.addEventListener('click', function() {
+            submenu.classList.toggle('open');
+            arrow.textContent = submenu.classList.contains('open') ? '▴' : '▾';
+        });
+    }
+});
+</script>
+
+</body>
+</html>
